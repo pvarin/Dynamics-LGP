@@ -4,6 +4,10 @@ An algorithm for learning dynamics online using the Local Gaussian Process algor
 ## Other References
 Just some of the relevant literature.
 
+### Variational Inference for Gaussian Processes
+- https://arxiv.org/pdf/1511.06499.pdf
+- https://pdfs.semanticscholar.org/48dc/1de73230c3b1ff15d5aa20132fbdc31ad7d5.pdf
+
 ### Learning Dynamics with Gaussian Processes
 - https://pdfs.semanticscholar.org/d98a/4711aaa73d7d7bd9a954b2c69f5f007e9f66.pdf
 - http://kyb.tuebingen.mpg.de/fileadmin/user_upload/files/publications/attachments/Nguyen-Tuong-ModelLearningLocalGaussianl_6067%5b0%5d.pdf
