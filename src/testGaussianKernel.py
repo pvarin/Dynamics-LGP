@@ -13,7 +13,7 @@ a = np.random.random(2)
 a = a/np.linalg.norm(a)
 b = np.random.random(2)
 b = b/np.linalg.norm(b)
-b = b - .8*b.dot(a)*a
+b = b - .8*b.dot(a)*a # make b almost proportional to a
 b = b/np.linalg.norm(b)
 W = np.outer(a,a) + np.outer(b,b)
 
