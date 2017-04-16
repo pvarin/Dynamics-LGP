@@ -4,6 +4,9 @@ An algorithm for learning dynamics online using the Local Gaussian Process algor
 ## Other References
 Just some of the relevant literature.
 
+### Model Selection for Gaussian Processes
+- http://www.gaussianprocess.org/gpml/chapters/RW5.pdf
+
 ### Variational Inference for Gaussian Processes
 - https://arxiv.org/pdf/1511.06499.pdf
 - https://pdfs.semanticscholar.org/48dc/1de73230c3b1ff15d5aa20132fbdc31ad7d5.pdf
