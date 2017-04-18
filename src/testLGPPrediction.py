@@ -9,8 +9,8 @@ from genData import *
 f = genRandomFunction()
 X, y = genDataFromFunction(f, N=1000)
 
-params = {'sigma_n':.0001, 'sigma_s':1, 'width':100}
-LGP = LGPCollection(.98, 100, max_models=3, **params)
+params = {'sigma_n':.0001, 'sigma_s':1, 'width':70}
+LGP = LGPCollection(.50, 100, max_models=3, **params)
 LGP.train(X, y)
 
 x = np.linspace(np.min(X),np.max(X))
@@ -29,7 +29,6 @@ for m in LGP.models:
 plt.plot(x[0,:],y_sub_model)
 plt.plot(x[0,:],y_expect,'k--')  # estimated from the GP
 
-
 # two dimensions
 dim = 2
 f = genRandomFunction(dim)
@@ -39,7 +38,7 @@ x_coord, y_coord = np.meshgrid(np.linspace(0,1), np.linspace(0,1))
 x_eval = np.vstack([np.reshape(x_coord,(1,-1)), np.reshape(y_coord,(1,-1))])
 f_eval = np.reshape(f(x_eval), x_coord.shape)
 
-LGP = LGPCollection(.98,100, max_models=3, **params)
+LGP = LGPCollection(.5,100, max_models=3, **params)
 LGP.train(X,y)
 y_expect = [LGP.eval_mean(x_eval[:,i]) for i in range(x_eval.shape[1])]
 y_expect = np.reshape(y_expect,x_coord.shape)
