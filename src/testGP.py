@@ -7,10 +7,10 @@ from genData import *
 
 # 1 dimension
 f = genRandomFunction()
-X, y = genDataFromFunction(f)
+X, y = genDataFromFunction(f, N=100)
 
-params = {'sigma_n':.0001, 'sigma_s':1, 'kernel_width':10}
-kernel = genGaussianKernel(params['sigma_s'],params['kernel_width'])
+params = {'sigma_n':.0001, 'sigma_s':1, 'width':10}
+kernel = genGaussianKernel(params['sigma_s'],params['width'])
 mean = lambda x: 0
 GP = GaussianProcess(mean, kernel, **params)
 GP.train(X, y)

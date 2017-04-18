@@ -25,7 +25,7 @@ class LocalGaussianProcess(GaussianProcess):
         self.update_center()
 
 class LGPCollection:
-    def __init__(self, distance_threshold, max_local_data, X=None, y=None, **kwargs):
+    def __init__(self, distance_threshold, max_local_data, max_models=10, X=None, y=None, **kwargs):
         # handle no input params and set defaults
         if kwargs is None:
             kwargs = dict()
@@ -33,6 +33,7 @@ class LGPCollection:
         self.sigma_s = kwargs.get('sigma_s',1)
         self.width = kwargs.get('width',1)
 
+        self.max_models = max_models
         self.models = set()
         self.distance_threshold = distance_threshold
         self.max_local_data = max_local_data
@@ -43,7 +44,7 @@ class LGPCollection:
     def compute_distance(self, x1, x2):
         return  np.exp(-.5*(x1-x2).T.dot(self.width).dot(x1-x2))
 
-    def initialize(self, X, y):
+    def train(self, X, y):
         for i in range(X.shape[1]):
             self.update(X[:,i],y[i,np.newaxis])
 
@@ -86,6 +87,12 @@ class LGPCollection:
 
         return models, distances
 
+    def get_nearest_models(self, x, M):
+        models = [(self.compute_distance(m.center, x), m) for m in self.models]
+        models.sort()
+        return models[-M:]
+
+
     def eval_mean(self, x):
-        models, distances = self.get_relevant_models(x)
-        return sum([d*m.eval_mean(x) for m, d in zip(models, distances)])/np.sum(distances)
+        models_distances = self.get_nearest_models(x, self.max_models)
+        return sum([d*m.eval_mean(x) for d, m in models_distances])/sum([d for d, _ in models_distances])

@@ -24,20 +24,19 @@ class GaussianProcess(object):
         if self._clean:
             return 
 
-        N = X.shape[1]
         if X is not None:
             self.X = X
         if y is not None:
             self.y = y
 
-        N = X.shape[1]
+        N = self.X.shape[1]
         self.K = np.zeros((N,N))
         for i in range(N):
             for j in range(i,N):
-                self.K[i,j] = self.kernel(X[:,i],X[:,j])
+                self.K[i,j] = self.kernel(self.X[:,i],self.X[:,j])
                 self.K[j,i] = self.K[i,j]
 
-        self.alpha = np.linalg.solve(self.K + self.sigma_n*np.eye(self.K.shape[0]),y)
+        self.alpha = np.linalg.solve(self.K + self.sigma_n*np.eye(self.K.shape[0]),self.y)
         self._clean = True
 
     def update(self, x, y):

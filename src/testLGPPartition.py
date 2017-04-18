@@ -5,6 +5,10 @@ from LocalGaussianProcess import LGPCollection
 
 
 def plot_cov_ellipse(cov, pos, nstd=2, ax=None, **kwargs):
+    '''
+    plots an ellipse corresponding to the 2 standard deviation
+    level set of the data around the mean
+    '''
     def eigsorted(cov):
         vals, vecs = np.linalg.eigh(cov)
         order = vals.argsort()[::-1]
@@ -43,6 +47,10 @@ def get_random_data(N):
     return X, y
 
 def step_through_data(X, y, model):
+    '''
+    Watch as one data point at a time is added to the LGP model
+    used for debugging
+    '''
     plt.figure()
     plt.ion()
     plt.show()
@@ -61,13 +69,32 @@ def step_through_data(X, y, model):
         print 'There are %s current models' % len(model.models)
 
 def plot_local_models(X, y, model):
-    model.initialize(X,y)
+    '''
+    Plots the data points for each of the local GPs, grouped by
+    color and outlined by an ellipse according to the dataset covariance
+    '''
+    model.train(X,y)
     plt.figure()
-    for j, m in enumerate(model.models):
+    for m in model.models:
         mean = m.center
         cov = (m.X-m.center[...,np.newaxis]).dot((m.X-m.center[...,np.newaxis]).T)/m.X.shape[1]
-        plot_cov_ellipse(cov, mean, fill=False, zorder=j)
-        plt.scatter(m.X[0,:],m.X[1,:],zorder=j)
+        plot_cov_ellipse(cov, mean, fill=False)
+        plt.scatter(m.X[0,:],m.X[1,:])
+
+def plot_model_weights(X, y, center, model):
+    '''
+    Same as plot_local_model, but color codes the models by their
+    distance to the variable 'center'
+    '''
+    model.train(X,y)
+    plt.figure()
+    for m in model.models:
+        mean = m.center
+        cov = (m.X-m.center[...,np.newaxis]).dot((m.X-m.center[...,np.newaxis]).T)/m.X.shape[1]
+        plot_cov_ellipse(cov, mean, fill=False)
+        color = model.compute_distance(m.center,center)*np.ones(m.X[1,:].shape)
+        plt.scatter(m.X[0,:], m.X[1,:], c=color, vmax=1.0, vmin=0.8)
+    plt.colorbar()
 
 if __name__ == '__main__':
     N = 1000
@@ -81,5 +108,7 @@ if __name__ == '__main__':
     X, y = get_random_data(N)
     unordered_model = LGPCollection(.98,100)
     plot_local_models(X,y,unordered_model)
-    plt.show()
 
+    # test the model weights
+    plot_model_weights(X, y, np.mean(X,1), unordered_model)
+    plt.show()
