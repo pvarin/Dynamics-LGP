@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from GaussianProcess import *
+from kernels import genGaussianKernel
 from genData import *
 
 # 1 dimension

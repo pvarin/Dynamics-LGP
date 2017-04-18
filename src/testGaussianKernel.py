@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from GaussianProcess import genGaussianKernel
+from kernels import genGaussianKernel
 
 # generate the center of the gaussian and the grid
 x_q = np.random.uniform(-1,1,2)

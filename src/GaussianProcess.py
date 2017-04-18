@@ -1,12 +1,7 @@
 import numpy as np
+from kernels import genGaussianKernel
 
-def genGaussianKernel(sigma_s, width):
-    def kernel(x_p,x_q):
-        return sigma_s*np.exp(-.5*(x_p-x_q).T.dot(width).dot(x_p-x_q))
-    
-    return kernel
-
-class GaussianProcess:
+class GaussianProcess(object):
     def __init__(self, mean=None, kernel=None, **kwargs):
         
         # handle no input params and set defaults
@@ -26,6 +21,9 @@ class GaussianProcess:
         self._clean = False
 
     def train(self, X=None, y=None):
+        if self._clean:
+            return 
+
         N = X.shape[1]
         if X is not None:
             self.X = X
@@ -43,7 +41,7 @@ class GaussianProcess:
         self._clean = True
 
     def update(self, x, y):
-        self.X = np.hstack([self.X,x])
+        self.X = np.hstack([self.X,x[...,np.newaxis]])
         self.y = np.hstack([self.y,y])
         self._clean = False
 
@@ -74,3 +72,10 @@ class GaussianProcess:
     def eval(self, x):
         k = self.get_k(x)
         return self.eval_mean(x,k=k), self.eval_var(x,k=k)
+
+    def drop_data(self):
+        # TODO: drop a data point to minimize information loss
+        N = self.X.shape[1]
+        idx = np.random.randint(0,N)
+        self.X = np.delete(self.X,idx,1)
+        self.y = np.delete(self.y,idx)
