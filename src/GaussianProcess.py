@@ -2,10 +2,10 @@ import numpy as np
 from kernels import GaussianKernel
 
 class GaussianProcess(object):
-    def __init__(self, mean=None, kernel=None, sigma_n=0.0):
+    def __init__(self, mean=None, kernel=None, sigma_n=0.001):
         
         # set defaults
-        self.sigma_n = sigma_n or 0.001
+        self.sigma_n = sigma_n
         self.kernel = kernel or GaussianKernel([1.0,1.0])
         self.mean = mean or (lambda x: 0)
         

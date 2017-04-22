@@ -4,10 +4,8 @@ from GaussianProcess import GaussianProcess
 from kernels import GaussianKernel
 
 class LocalGaussianProcess(GaussianProcess):
-    def __init__(self, max_data=100, **kwargs):
-        super(LocalGaussianProcess, self).__init__(
-                    kernel = GaussianKernel([kwargs['sigma_s'],
-                                               kwargs['width']]))
+    def __init__(self, params, max_data=100, **kwargs):
+        super(LocalGaussianProcess, self).__init__(kernel = GaussianKernel(params), **kwargs)
         self.center = None
         self.max_data = max_data
 
@@ -25,14 +23,10 @@ class LocalGaussianProcess(GaussianProcess):
         self.update_center()
 
 class LGPCollection:
-    def __init__(self, distance_threshold, max_local_data, max_models=10, X=None, y=None, **kwargs):
-        # handle no input params and set defaults
-        if kwargs is None:
-            kwargs = dict()
-        self.sigma_n = kwargs.get('sigma_n',1)
-        self.sigma_s = kwargs.get('sigma_s',1)
-        self.width = kwargs.get('width',1)
-
+    def __init__(self, distance_threshold, max_local_data, max_models=10, X=None, y=None, sigma_n = 0.001, init_params=[1.0, 10.0]):
+        
+        self.sigma_n = sigma_n
+        self.init_params = init_params
         self.max_models = max_models
         self.models = set()
         self.distance_threshold = distance_threshold
@@ -41,8 +35,8 @@ class LGPCollection:
         if (X is not None) and (y is not None):
             self.initialize(X,y)
 
-    def compute_distance(self, x1, x2):
-        return  np.exp(-.5*(x1-x2).T.dot(self.width).dot(x1-x2))
+    def compute_distance(self, model, x1, x2):
+        return  model.kernel.eval(x1, x2)
 
     def train(self, X, y):
         for i in range(X.shape[1]):
@@ -56,10 +50,7 @@ class LGPCollection:
             m.update(x, y)
 
     def add_model(self, X, y):
-        GP_params = {'sigma_n' : self.sigma_n,
-                     'sigma_s' : self.sigma_s,
-                     'width'   : self.width}
-        m = LocalGaussianProcess(max_data = self.max_local_data, **GP_params)
+        m = LocalGaussianProcess(self.init_params, sigma_n=self.sigma_n, max_data=self.max_local_data)
         m.train(X=X,y=y)
         self.models.add(m)
 
@@ -68,7 +59,7 @@ class LGPCollection:
         max_distance = -np.inf
 
         for m in self.models:
-            d = self.compute_distance(m.center, x)
+            d = self.compute_distance(m, m.center, x)
             if d > max_distance:
                 nearest_model = m
                 max_distance = d
@@ -80,7 +71,7 @@ class LGPCollection:
         distances = []
 
         for m in self.models:
-            d = self.compute_distance(m.center, x)
+            d = self.compute_distance(m, m.center, x)
             if d > self.distance_threshold:
                 models.append(m)
                 distances.append(d)
@@ -88,7 +79,7 @@ class LGPCollection:
         return models, distances
 
     def get_nearest_models(self, x, M):
-        models = [(self.compute_distance(m.center, x), m) for m in self.models]
+        models = [(self.compute_distance(m, m.center, x), m) for m in self.models]
         models.sort()
         return models[-M:]
 

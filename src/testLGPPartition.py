@@ -92,23 +92,25 @@ def plot_model_weights(X, y, center, model):
         mean = m.center
         cov = (m.X-m.center[...,np.newaxis]).dot((m.X-m.center[...,np.newaxis]).T)/m.X.shape[1]
         plot_cov_ellipse(cov, mean, fill=False)
-        color = model.compute_distance(m.center,center)*np.ones(m.X[1,:].shape)
-        plt.scatter(m.X[0,:], m.X[1,:], c=color, vmax=1.0, vmin=0.8)
+        color = model.compute_distance(m, m.center, center)*np.ones(m.X[1,:].shape)
+        plt.scatter(m.X[0,:], m.X[1,:], c=color, vmax=1.0, vmin=min(np.min(color),0.8))
     plt.colorbar()
 
 if __name__ == '__main__':
     N = 1000
+    init_params = [1.0,1.0]
 
     # test with sequential data
     X, y = get_sequential_data(N)
-    seq_model = LGPCollection(.98,100)
+    seq_model = LGPCollection(.98, 100, init_params=init_params)
     plot_local_models(X,y,seq_model)
 
     # test with randomly ordered data
     X, y = get_random_data(N)
-    unordered_model = LGPCollection(.98,100)
+    unordered_model = LGPCollection(.98, 100, init_params=init_params)
     plot_local_models(X,y,unordered_model)
 
     # test the model weights
     plot_model_weights(X, y, np.mean(X,1), unordered_model)
+    
     plt.show()
