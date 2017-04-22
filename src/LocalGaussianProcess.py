@@ -1,13 +1,13 @@
 import numpy as np
 
 from GaussianProcess import GaussianProcess
-from kernels import genGaussianKernel
+from kernels import GaussianKernel
 
 class LocalGaussianProcess(GaussianProcess):
     def __init__(self, max_data=100, **kwargs):
         super(LocalGaussianProcess, self).__init__(
-                    kernel = genGaussianKernel(kwargs['sigma_s'],
-                                               kwargs['width']))
+                    kernel = GaussianKernel([kwargs['sigma_s'],
+                                               kwargs['width']]))
         self.center = None
         self.max_data = max_data
 

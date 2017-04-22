@@ -1,8 +1,8 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
-from GaussianProcess import *
-from kernels import genGaussianKernel
+from GaussianProcess import GaussianProcess
+from kernels import GaussianKernel
 from genData import *
 
 # 1 dimension

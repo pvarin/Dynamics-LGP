@@ -21,9 +21,3 @@ class GaussianKernel(object):
         g = [np.exp(-.5*(x_p-x_q).T.dot(self.width).dot(x_p-x_q)), # partial wrt sigma_s
              self.sigma_s*np.exp(-.5*(x_p-x_q).T.dot(self.width).dot(x_p-x_q))*(-.5*(x_p-x_q).T.dot(x_p-x_q))]
         return g
-
-def genGaussianKernel(sigma_s, width):
-        def kernel(x_p,x_q):
-                return sigma_s*np.exp(-.5*(x_p-x_q).T.dot(width).dot(x_p-x_q))
-        
-        return kernel

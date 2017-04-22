@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from LocalGaussianProcess import LGPCollection
-from kernels import genGaussianKernel
 from genData import *
 
 # 1 dimension

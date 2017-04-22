@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from kernels import genGaussianKernel
+from kernels import GaussianKernel
 
 # generate the center of the gaussian and the grid
 x_q = np.random.uniform(-1,1,2)
@@ -18,8 +18,8 @@ b = b/np.linalg.norm(b)
 W = np.outer(a,a) + np.outer(b,b)
 
 # compute the kernel value over the entire grid
-kernel = genGaussianKernel(1,W)
-K = np.array([kernel(x_q,np.hstack([x_0,x_1])) for x_0, x_1 in zip(x_p_0, x_p_1)])
+kernel = GaussianKernel([1,W])
+K = np.array([kernel.eval(x_q,np.hstack([x_0,x_1])) for x_0, x_1 in zip(x_p_0, x_p_1)])
 K = np.reshape(K,x_p[0].shape)
 
 # plot the gaussian
