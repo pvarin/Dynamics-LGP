@@ -9,11 +9,12 @@ from genData import *
 f = genRandomFunction()
 X, y = genDataFromFunction(f, N=100)
 
-params = {'sigma_n':.0001, 'sigma_s':1.0, 'width':10.0}
+params = {'sigma_n':.01, 'sigma_s':1.0, 'width':10.0}
 kernel = GaussianKernel([params['sigma_s'],params['width']])
 mean = lambda x: 0
 GP = GaussianProcess(mean, kernel, sigma_n=params['sigma_n'])
 GP.train(X, y)
+GP.optimize_hyperparameters_gradient()
 
 x = np.linspace(np.min(X),np.max(X))
 x = np.reshape(x,(1,-1))
@@ -36,6 +37,9 @@ f_eval = np.reshape(f(x_eval), x_coord.shape)
 
 GP = GaussianProcess(mean, kernel)
 GP.train(X,y)
+GP.optimize_hyperparameters_gradient()
+
+# evaluate
 y_expect = [GP.eval_mean(x_eval[:,i]) for i in range(x_eval.shape[1])]
 y_expect = np.reshape(y_expect,x_coord.shape)
 v_max = max(np.max(y), -np.min(y))
