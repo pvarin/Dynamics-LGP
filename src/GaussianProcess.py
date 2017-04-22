@@ -1,20 +1,12 @@
 import numpy as np
-from kernels import genGaussianKernel
+from kernels import GaussianKernel
 
 class GaussianProcess(object):
-    def __init__(self, mean=None, kernel=None, **kwargs):
+    def __init__(self, mean=None, kernel=None, sigma_n=0.0):
         
-        # handle no input params and set defaults
-        if kwargs is None:
-            kwargs = dict()
-        self.sigma_n = kwargs.get('sigma_n',1)
-        self.sigma_s = kwargs.get('sigma_s',1)
-        self.width = kwargs.get('width',1)
-
-        # set default kernel to be the gaussian kernel
-        self.kernel = kernel or genGaussianKernel(self.sigma_s, self.width)
-
-        # set default mean to be the zero function
+        # set defaults
+        self.sigma_n = sigma_n or 0.001
+        self.kernel = kernel or GaussianKernel([1.0,1.0])
         self.mean = mean or (lambda x: 0)
         
         # indicate that the model hasn't been trained yet
@@ -33,8 +25,10 @@ class GaussianProcess(object):
         self.K = np.zeros((N,N))
         for i in range(N):
             for j in range(i,N):
-                self.K[i,j] = self.kernel(self.X[:,i],self.X[:,j])
+                self.K[i,j] = self.kernel.eval(self.X[:,i],self.X[:,j])
                 self.K[j,i] = self.K[i,j]
+
+        self.inv_K = np.linalg.inv(self.K)
 
         self.alpha = np.linalg.solve(self.K + self.sigma_n*np.eye(self.K.shape[0]),self.y)
         self._clean = True
@@ -54,7 +48,7 @@ class GaussianProcess(object):
         return k.dot(self.alpha)
 
     def get_k(self,x):
-        k = np.array([self.kernel(self.X[:,i],x) for i in range(self.X.shape[1])])
+        k = np.array([self.kernel.eval(self.X[:,i],x) for i in range(self.X.shape[1])])
         return k
 
     def eval_var(self, x, k=None):
@@ -65,7 +59,7 @@ class GaussianProcess(object):
             k = self.get_k(x)
 
         A = np.linalg.solve(self.K + self.params['sigma_n']*np.eye(self.K.shape),k)
-        var = self.kernel(x,x) - k.dot(A)
+        var = self.kernel.eval(x,x) - k.dot(A)
         return var
 
     def eval(self, x):
@@ -78,3 +72,74 @@ class GaussianProcess(object):
         idx = np.random.randint(0,N)
         self.X = np.delete(self.X,idx,1)
         self.y = np.delete(self.y,idx)
+
+    def get_loglikelihood(self):
+        # make sure the model is trained
+        if not self._clean:
+            self.train()
+
+        # compute the log-likelihood
+
+        sign, logdet = np.linalg.slogdet((self.K + self.sigma_n*np.eye(self.K.shape[0])))
+        if sign < 0:
+            raise RuntimeError('Covariance has negative determinant')
+
+        ll = -.5*self.y.T.dot(self.alpha)
+        ll += -.5*logdet
+        ll += -.5*self.y.shape[0]*np.log(2*np.pi)
+
+        return ll
+
+    def get_cov_deriv(self):
+        N = self.y.shape[0]
+        N_params = len(self.kernel.params)
+        dK = [np.zeros((N,N)) for _ in range(N_params)]
+        for i in range(N):
+            for j in range(i,N):
+                for k, dp in enumerate(self.kernel.eval_grad(self.X[:,i],self.X[:,j])):
+                    dK[k][i,j] = dp
+                    dK[k][j,i] = dp
+        return dK
+
+    def get_param_grad(self):
+        dK = self.get_cov_deriv()
+        grad = np.zeros(len(dK))
+
+        for i in range(len(dK)):
+            grad[i] = .5*np.trace((self.alpha[...,np.newaxis].dot(self.alpha[...,np.newaxis].T) - self.inv_K).dot(dK[i]))
+
+        return grad
+
+    def optimize_hyperparameters_gradient(self):
+        # use gradient descent to optimize the hyperparameters
+        params = self.kernel.params
+        ll = self.get_loglikelihood()
+        grad = np.inf
+        while (np.linalg.norm(grad) > 0.001):
+            grad = self.get_param_grad()
+            stepsize = min(1.0, 10.0/np.linalg.norm(grad)) #don't move more than 10 units away in any step
+            while True:
+                # choose the stepsize
+                new_params = params + stepsize*grad
+
+                if (new_params < 0).any(): # don't let any of the parameters go below zero
+                    stepsize *= 0.1
+                    continue
+
+                self.kernel.set_params(new_params)
+                self._clean = False
+                self.train()
+                try:
+                    new_ll = self.get_loglikelihood()
+                except:
+                    stepsize *= 0.1
+                    continue
+
+                if new_ll > ll:
+                    params = new_params
+                    ll = new_ll
+                    break
+                else:
+                    if stepsize < 1e-20:
+                        return
+                    stepsize *= 0.1
