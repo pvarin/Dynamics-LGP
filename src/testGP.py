@@ -19,12 +19,17 @@ GP.optimize_hyperparameters_gradient()
 x = np.linspace(np.min(X),np.max(X))
 x = np.reshape(x,(1,-1))
 
-y_expect = [GP.eval_mean(x[:,i]) for i in range(x.shape[1])]
+y_expect = np.array([GP.eval_mean(x[:,i]) for i in range(x.shape[1])])
+y_var = np.array([GP.eval_var(x[:,i]) for i in range(x.shape[1])])
+y_std = np.sqrt(y_var)
 
 plt.figure()
-plt.plot(x[0,:].flatten(),f(x)) # true function
-plt.plot(X[0,:],y,'.')          # noisy data
-plt.plot(x[0,:],y_expect,'--')  # estimated from the GP
+true, = plt.plot(x[0,:].flatten(), f(x), color='black',label='True Function') # true function
+data, = plt.plot(X[0,:], y, '.',color='orange',label='Data') # noisy data
+mean, = plt.plot(x[0,:], y_expect, '--',color='blue',label='Estimated Mean') # estimated from the GP
+plt.fill_between(x[0,:], y_expect + 2*y_std, y_expect - 2*y_std, color='gray', linewidth=0.0, alpha=0.5)
+plt.legend(handles = [true, data, mean])
+plt.show()
 
 # two dimensions
 dim = 2

@@ -58,7 +58,7 @@ class GaussianProcess(object):
         if k is None:
             k = self.get_k(x)
 
-        A = np.linalg.solve(self.K + self.params['sigma_n']*np.eye(self.K.shape),k)
+        A = np.linalg.solve(self.K + self.sigma_n*np.eye(self.K.shape[0]),k)
         var = self.kernel.eval(x,x) - k.dot(A)
         return var
 
