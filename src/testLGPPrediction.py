@@ -2,64 +2,76 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from LocalGaussianProcess import LGPCollection
+from kernels import GaussianKernel
 from genData import *
 
-# 1 dimension
-f = genRandomFunction()
-X, y = genDataFromFunction(f, N=1000)
+def test_1D():
+    # 1 dimension
+    f = genRandomFunction()
+    X, y = genDataFromFunction(f, N=1000)
 
-LGP = LGPCollection(.50, 100, max_models=3, sigma_n=0.1, init_params=[1.0, 70.0])
-LGP.train(X, y)
+    kernel = GaussianKernel([1.0, 10.0])
+    LGP = LGPCollection(kernel, .50, 100, max_models=3, sigma_n=0.1)
+    LGP.train(X=X, y=y, optimize=True)
 
-x = np.linspace(np.min(X),np.max(X))
-x = np.reshape(x,(1,-1))
+    x = np.linspace(np.min(X),np.max(X))
+    x = np.reshape(x,(1,-1))
 
-y_expect = [LGP.eval_mean(x[:,i]) for i in range(x.shape[1])]
+    y_expect = [LGP.eval_mean(x[:,i]) for i in range(x.shape[1])]
 
-y_sub_model = [[m.eval_mean(x[:,i]) for i in range(x.shape[1])] for m in LGP.models]
-y_sub_model = np.array(y_sub_model).T
+    y_sub_model = [[m.eval_mean(x[:,i]) for i in range(x.shape[1])] for m in LGP.models]
+    y_sub_model = np.array(y_sub_model).T
 
-plt.figure()
-plt.plot(x[0,:].flatten(),f(x)) # true function
-plt.plot(X[0,:],y,'.')          # noisy data
-for m in LGP.models:
-    plt.plot(m.X[0,:],m.y,'o',mfc='none')
-plt.plot(x[0,:],y_sub_model)
-plt.plot(x[0,:],y_expect,'k--')  # estimated from the GP
+    plt.figure()
+    plt.plot(x[0,:].flatten(),f(x)) # true function
+    plt.plot(X[0,:],y,'.')          # noisy data
+    for m in LGP.models:
+        plt.plot(m.X[0,:],m.y,'o',mfc='none')
+    plt.plot(x[0,:],y_sub_model)
+    plt.plot(x[0,:],y_expect,'k--')  # estimated from the GP
 
-# two dimensions
-dim = 2
-f = genRandomFunction(dim)
-X, y = genDataFromFunction(f, dim=dim, N=1000)
 
-x_coord, y_coord = np.meshgrid(np.linspace(0,1), np.linspace(0,1))
-x_eval = np.vstack([np.reshape(x_coord,(1,-1)), np.reshape(y_coord,(1,-1))])
-f_eval = np.reshape(f(x_eval), x_coord.shape)
+def test_2D():
+    # two dimensions
+    dim = 2
+    f = genRandomFunction(dim)
+    X, y = genDataFromFunction(f, dim=dim, N=1000)
 
-LGP = LGPCollection(.5,100, max_models=3, sigma_n=0.1, init_params=[1.0, 70.0])
-LGP.train(X,y)
-y_expect = [LGP.eval_mean(x_eval[:,i]) for i in range(x_eval.shape[1])]
-y_expect = np.reshape(y_expect,x_coord.shape)
-v_max = max(np.max(y), -np.min(y))
+    x_coord, y_coord = np.meshgrid(np.linspace(0,1), np.linspace(0,1))
+    x_eval = np.vstack([np.reshape(x_coord,(1,-1)), np.reshape(y_coord,(1,-1))])
+    f_eval = np.reshape(f(x_eval), x_coord.shape)
 
-# plot
-color_options = {'cmap':'RdBu', 'vmin':-v_max, 'vmax':v_max}
+    kernel = GaussianKernel([1.0, 10.0])
+    LGP = LGPCollection(kernel, .50, 100, max_models=3, sigma_n=0.1)
+    LGP.train(X=X, y=y, optimize=True)
 
-plt.figure()
-plt.subplot(4,1,1)
-plt.pcolor(x_coord, y_coord, f_eval, **color_options)
-plt.title('Original Function')
+    y_expect = [LGP.eval_mean(x_eval[:,i]) for i in range(x_eval.shape[1])]
+    y_expect = np.reshape(y_expect,x_coord.shape)
+    v_max = max(np.max(y), -np.min(y))
 
-plt.subplot(4,1,2)
-plt.scatter(X[0,:], X[1,:], c=y, **color_options)
-plt.title('Data')
+    # plot
+    color_options = {'cmap':'RdBu', 'vmin':-v_max, 'vmax':v_max}
 
-plt.subplot(4,1,3)
-plt.title('LGP Estimation')
-plt.pcolor(x_coord, y_coord, y_expect, **color_options)
+    plt.figure()
+    plt.subplot(4,1,1)
+    plt.pcolor(x_coord, y_coord, f_eval, **color_options)
+    plt.title('Original Function')
 
-plt.subplot(4,1,4)
-plt.pcolor(x_coord, y_coord, -f_eval+y_expect, **color_options)
-plt.title('Residual')
+    plt.subplot(4,1,2)
+    plt.scatter(X[0,:], X[1,:], c=y, **color_options)
+    plt.title('Data')
 
-plt.show()
+    plt.subplot(4,1,3)
+    plt.title('LGP Estimation')
+    plt.pcolor(x_coord, y_coord, y_expect, **color_options)
+
+    plt.subplot(4,1,4)
+    plt.pcolor(x_coord, y_coord, -f_eval+y_expect, **color_options)
+    plt.title('Residual')
+
+    plt.show()
+
+if __name__=='__main__':
+    test_1D()
+    test_2D()
+    plt.show()

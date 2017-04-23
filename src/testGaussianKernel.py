@@ -20,6 +20,11 @@ W = np.outer(a,a) + np.outer(b,b)
 # compute the kernel value over the entire grid
 kernel = GaussianKernel([1,W])
 K = np.array([kernel.eval(x_q,np.hstack([x_0,x_1])) for x_0, x_1 in zip(x_p_0, x_p_1)])
+
+# test batch evaluation
+K_ = kernel.eval_batch(x_q[...,np.newaxis], np.reshape(x_p, (2,-1)))
+assert((K == K_).all())
+
 K = np.reshape(K,x_p[0].shape)
 
 # plot the gaussian
