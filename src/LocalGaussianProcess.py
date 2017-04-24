@@ -44,7 +44,7 @@ class LGPCollection:
                 m.train()
         else:
             if optimize:
-                optimizing_iter = range(0,X.shape[1],10)
+                optimizing_iter = range(0,X.shape[1],100)
             for i in range(X.shape[1]):
                 print i
                 self.update(X[:,i],y[i,np.newaxis])
@@ -96,12 +96,26 @@ class LGPCollection:
         models_distances = self.get_nearest_models(x, self.max_models)
         return sum([d*m.eval_mean(x) for d, m in models_distances])/sum([d for d, _ in models_distances])
 
-    def get_loglikelihood(self):
+    def get_loglikelihood_individual(self):
         ll = 0.0
         for m in self.models:
             ll += m.get_loglikelihood()
 
         return ll
+
+    def get_loglikelihood(self):
+        y, X = self.subsample_data()
+        K = self.kernel.eval_batch_symm(X)
+        return GaussianProcess.loglikelihood(y,K,self.sigma_n)
+
+    def subsample_data(self,N=100):
+        data = np.hstack([np.vstack([m.y, m.X]) for m in self.models])
+        N = min(N,data.shape[1])
+        idx = np.random.choice(data.shape[1], size=N, replace=False)
+        y = data[0, idx]
+        X = data[1:, idx]
+        return y, X
+
 
     def optimize_hyperparameters_random_search(self, lb=[0.1, 0.1], ub=[10.0,100.0], N=10):
         # generate some random hyperparameter samples, include the current parameters
