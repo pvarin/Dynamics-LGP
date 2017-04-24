@@ -75,5 +75,5 @@ def test_2d():
 
 if __name__ == '__main__':
     test_1d()
-    test_2d()
+    # test_2d()
     plt.show()
